@@ -22,7 +22,7 @@ class ValidationResult{
 
     public ValidationResult(boolean valid, List<String> messages){
         this.valid = valid;
-        this.messages = messages;
+        this.messages = List.copyOf(messages);
     }
 
     public static ValidationResult ok(){
@@ -55,7 +55,7 @@ class ValidationResult{
         return valid;
     }
     public List<String> getErrors(){
-        return Collections.unmodifiableList(messages);
+        return messages;
     }
 
 }
