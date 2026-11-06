@@ -1,3 +1,5 @@
+package zad1;
+
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -8,12 +10,12 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-class Canvas2{
-    private String  id;
+class Canvas {
+    private String id;
     private ArrayList<Integer> squares;
 
 
-    Canvas2(String id, ArrayList<Integer> squares){
+    Canvas(String id, ArrayList<Integer> squares) {
         this.id = id;
         this.squares = squares;
     }
@@ -22,25 +24,25 @@ class Canvas2{
         return id;
     }
 
-    int getSize(){
+    int getSize() {
         return squares.size();
     }
 
-    int getPerimetar(){
-        int L=0;
+    int getPerimetar() {
+        int L = 0;
 
-        for(int i=0;i<squares.size();i++){
-            L+=squares.get(i);
+        for (int i = 0; i < squares.size(); i++) {
+            L += squares.get(i);
         }
-        return L*4;
+        return L * 4;
     }
 
 }
 
-class ShapesApplication2{
-    private ArrayList<Canvas2> canvas;
+class ShapesApplication {
+    private ArrayList<Canvas> canvas;
 
-    public ShapesApplication2() {
+    public ShapesApplication() {
         this.canvas = new ArrayList<>();
     }
 
@@ -52,18 +54,18 @@ class ShapesApplication2{
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(in));
 
-        while(( line = reader.readLine() ) != null){
+        while ((line = reader.readLine()) != null) {
 
             String[] parts = line.split(" ");
 
-            String id =  parts[0];
+            String id = parts[0];
             ArrayList<Integer> squares = new ArrayList<>();
 
-            for(int i=1;i<parts.length;i++){
+            for (int i = 1; i < parts.length; i++) {
                 squares.add(Integer.parseInt(parts[i]));
             }
 
-            Canvas2 c = new Canvas2(id,squares);
+            Canvas c = new Canvas(id, squares);
             canvas.add(c);
 
             count += c.getSize();
@@ -79,8 +81,8 @@ class ShapesApplication2{
         int size = canvas.get(0).getSize();
         int L = canvas.get(0).getPerimetar();
 
-        for( int i = 1; i<canvas.size();i++){
-            if ( L < canvas.get(i).getPerimetar()){
+        for (int i = 1; i < canvas.size(); i++) {
+            if (L < canvas.get(i).getPerimetar()) {
                 id = canvas.get(i).getId();
                 size = canvas.get(i).getSize();
                 L = canvas.get(i).getPerimetar();
@@ -94,7 +96,7 @@ class ShapesApplication2{
 public class Shapes1Test {
 
     public static void main(String[] args) throws IOException {
-        ShapesApplication2 shapesApplication = new ShapesApplication2();
+        ShapesApplication shapesApplication = new ShapesApplication();
 
         System.out.println("===READING SQUARES FROM INPUT STREAM===");
         System.out.println(shapesApplication.readCanvases(System.in));

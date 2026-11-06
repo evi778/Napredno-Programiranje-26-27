@@ -1,3 +1,5 @@
+package zad4;
+
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -5,59 +7,77 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+
 interface ILog {
-    String getMessage();
+    //TODO write methods definitions here;
     String getType();
+
+    long getTimestamp();
+
+    String getMessage();
 
     void setMessage(String newMessage);
 
-    long getTimestamp();
 }
 
-interface LogProcessor<T> {
-ArrayList<T> processLogs(ArrayList<T> logs);
+
+interface LogProcessor<T extends ILog> {
+    ArrayList<T> processLogs(ArrayList<T> logs);
 }
 
-class LogSystem<T extends ILog> {
-//TODO add instance variable(s)
-    ArrayList<T> logsList;
+class LogSystem<T extends ILog> implements Comparator<T> {
+    //TODO add instance variable(s)
+    ArrayList<T> logsList = new ArrayList<>();
 
-//TODO constructor
-    public LogSystem(ArrayList<T> elements){
-        this.logsList = elements;
+    //TODO constructor
+    public LogSystem(ArrayList<T> logs) {
+        this.logsList = logs;
     }
 
-void printResults() {
+    void printResults() {
 
-    //TODO define concrete log processors with lambda expressions
-    LogProcessor<T> firstLogProcessor = logs ->
-            logs.stream()
-                    .filter(l -> l.getType().equals("INFO"))
-                    .collect(Collectors.toCollection(ArrayList::new));
+        //TODO define concrete log processors with lambda expressions
+        LogProcessor<T> firstLogProcessor = new LogProcessor<T>() {
+            @Override
+            public ArrayList<T> processLogs(ArrayList<T> logs) {
+                return logs.stream().filter(l -> l.getType().equals("INFO")).collect(Collectors.toCollection(ArrayList::new));
+            }
+        };
 
-    LogProcessor<T> secondLogProcessor = new LogProcessor<T>() {
-        @Override
-        public ArrayList<T> processLogs(ArrayList<T> logs) {
-            return null;
-        }
-    };
+        LogProcessor<T> secondLogProcessor = new LogProcessor<T>() {
+            @Override
+            public ArrayList<T> processLogs(ArrayList<T> logs) {
+                return logs.stream().filter(l -> l.getMessage().length() < 100).collect(Collectors.toCollection(ArrayList::new));
+            }
+        };
 
-    LogProcessor<T> thirdLogProcessor = new LogProcessor<T>() {
-        @Override
-        public ArrayList<T> processLogs(ArrayList<T> logs) {
-            return null;
-        }
-    };
+        LogProcessor<T> thirdLogProcessor = new LogProcessor<T>() {
+            @Override
+            public ArrayList<T> processLogs(ArrayList<T> logs) {
+                return logs.stream().sorted((o1, o2) -> compare(o1, o2)).collect(Collectors.toCollection(ArrayList::new));
+            }
+        };
 
-    System.out.println("RESULTS FROM THE FIRST LOG PROCESSOR");
-    firstLogProcessor.processLogs(logsList).forEach(l -> System.out.println(l.toString()));
+        System.out.println("RESULTS FROM THE FIRST LOG PROCESSOR");
+        firstLogProcessor.processLogs(logsList).forEach(l -> System.out.println(l.toString()));
 
-    System.out.println("RESULTS FROM THE SECOND LOG PROCESSOR");
-    secondLogProcessor.processLogs(logsList).forEach(l -> System.out.println(l.toString()));
+        System.out.println("RESULTS FROM THE SECOND LOG PROCESSOR");
+        secondLogProcessor.processLogs(logsList).forEach(l -> System.out.println(l.toString()));
 
-    System.out.println("RESULTS FROM THE THIRD LOG PROCESSOR");
-    thirdLogProcessor.processLogs(logsList).forEach(l -> System.out.println(l.toString()));
-}
+        System.out.println("RESULTS FROM THE THIRD LOG PROCESSOR");
+        thirdLogProcessor.processLogs(logsList).forEach(l -> System.out.println(l.toString()));
+    }
+
+
+    @Override
+    public int compare(T o1, T o2) {
+        if (o1.getTimestamp() > o2.getTimestamp())
+            return 1;
+        else if (o1.getTimestamp() < o2.getTimestamp())
+            return -1;
+        return 0;
+    }
+
 }
 
 class RealLog implements ILog, Comparable<RealLog> {

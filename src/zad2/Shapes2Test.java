@@ -1,3 +1,5 @@
+package zad2;
+
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -6,28 +8,31 @@ import java.util.Comparator;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 
-class IrregularCanvasException  extends Exception {
+class IrregularCanvasException extends Exception {
 
     public IrregularCanvasException(String canvas_id, double max_area) {
-        super("Canvas " + canvas_id +" has a shape with area larger than " + String.format("%.2f", max_area));
+        super("Canvas " + canvas_id + " has a shape with area larger than " + String.format("%.2f", max_area));
     }
 }
 
-abstract class Shape{
+abstract class Shape {
     double size;
 
     public Shape(double size) {
         this.size = size;
     }
 
+    public double getSize() {
+        return size;
+    }
 
-    public double getArea(){
+    public double getArea() {
         return 0;
     }
 
 }
 
-class Circle extends Shape{
+class Circle extends Shape {
 
     public Circle(double radius) {
         super(radius);
@@ -35,11 +40,11 @@ class Circle extends Shape{
 
     @Override
     public double getArea() {
-        return size*size*Math.PI;
+        return size * size * Math.PI;
     }
 }
 
-class Square extends Shape{
+class Square extends Shape {
 
     public Square(double side) {
         super(side);
@@ -52,18 +57,18 @@ class Square extends Shape{
 }
 
 
-class ShapeCanvas{
-    private String  id;
+class ShapeCanvas {
+    private String id;
     private ArrayList<Shape> shapes;
 
-    double minArea=1000000000;
-    double maxArea=0;
-    double averageArea=0;
-    int circle_count=0;
-    int square_count=0;
+    double minArea = 1000000000;
+    double maxArea = 0;
+    double averageArea = 0;
+    int circle_count = 0;
+    int square_count = 0;
 
 
-    ShapeCanvas(String id, ArrayList<Shape> shapes){
+    ShapeCanvas(String id, ArrayList<Shape> shapes) {
         this.id = id;
         this.shapes = shapes;
 
@@ -77,11 +82,10 @@ class ShapeCanvas{
             }
             averageArea += area;
 
-            if (shape instanceof Square){
-                square_count+=1;
-            }
-            else {
-                circle_count+=1;
+            if (shape instanceof Square) {
+                square_count += 1;
+            } else {
+                circle_count += 1;
             }
         }
 
@@ -92,12 +96,12 @@ class ShapeCanvas{
         return id;
     }
 
-    public int getSize(){
+    public int getSize() {
         return shapes.size();
     }
 
-    public double getMinArea(){
-        return  minArea;
+    public double getMinArea() {
+        return minArea;
     }
 
     public double getMaxArea() {
@@ -115,17 +119,21 @@ class ShapeCanvas{
     }
 
     public int getTotalCircles() {
-        return  circle_count;
+        return circle_count;
     }
+
     public int getTotalSquares() {
-        return  square_count;
+        return square_count;
     }
 }
 
 class ShapesApplication {
     private final ArrayList<ShapeCanvas> canvas;
-    private final double maxArea;
+    private double maxArea;
 
+    public ShapesApplication() {
+        this.canvas = new ArrayList<>();
+    }
 
     public ShapesApplication(double maxArea) {
         this.canvas = new ArrayList<>();
@@ -204,6 +212,7 @@ class ShapesApplication {
         pw.flush();
     }
 }
+
 public class Shapes2Test {
 
     public static void main(String[] args) throws IOException, IrregularCanvasException {
