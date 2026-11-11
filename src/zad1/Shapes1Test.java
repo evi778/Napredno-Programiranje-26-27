@@ -1,101 +1,12 @@
 package zad1;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.util.ArrayList;
 import java.io.*;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
-class Canvas {
-    private String id;
-    private ArrayList<Integer> squares;
-
-
-    Canvas(String id, ArrayList<Integer> squares) {
-        this.id = id;
-        this.squares = squares;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    int getSize() {
-        return squares.size();
-    }
-
-    int getPerimetar() {
-        int L = 0;
-
-        for (int i = 0; i < squares.size(); i++) {
-            L += squares.get(i);
-        }
-        return L * 4;
-    }
-
-}
-
-class ShapesApplication {
-    private ArrayList<Canvas> canvas;
-
-    public ShapesApplication() {
-        this.canvas = new ArrayList<>();
-    }
-
-
-    public int readCanvases(InputStream in) throws IOException {
-
-        int count = 0;
-        String line;
-
-        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-
-        while ((line = reader.readLine()) != null) {
-
-            String[] parts = line.split(" ");
-
-            String id = parts[0];
-            ArrayList<Integer> squares = new ArrayList<>();
-
-            for (int i = 1; i < parts.length; i++) {
-                squares.add(Integer.parseInt(parts[i]));
-            }
-
-            Canvas c = new Canvas(id, squares);
-            canvas.add(c);
-
-            count += c.getSize();
-        }
-
-        return count;
-
-    }
-
-    public void printLargestCanvasTo(PrintStream out) {
-
-        String id = canvas.get(0).getId();
-        int size = canvas.get(0).getSize();
-        int L = canvas.get(0).getPerimetar();
-
-        for (int i = 1; i < canvas.size(); i++) {
-            if (L < canvas.get(i).getPerimetar()) {
-                id = canvas.get(i).getId();
-                size = canvas.get(i).getSize();
-                L = canvas.get(i).getPerimetar();
-            }
-        }
-
-        System.out.print(id + " " + size + " " + L + "\n");
-    }
-}
 
 public class Shapes1Test {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         ShapesApplication shapesApplication = new ShapesApplication();
 
         System.out.println("===READING SQUARES FROM INPUT STREAM===");
@@ -103,5 +14,72 @@ public class Shapes1Test {
         System.out.println("===PRINTING LARGEST CANVAS TO OUTPUT STREAM===");
         shapesApplication.printLargestCanvasTo(System.out);
 
+    }
+}
+
+class Shape{
+    int size;
+
+    public Shape(int size) {
+        this.size = size;
+    }
+
+    int getL(){
+        return 4*size;
+    }
+}
+
+class Canvas{
+    String id;
+    List<Shape> shapes;
+
+    public Canvas(String line) {
+        String[] parts = line.split("\\s+");
+
+        id = parts[0];
+        shapes = new ArrayList<>();
+
+        for(int i=1;i<parts.length;i++){
+            shapes.add(new Shape(Integer.parseInt(parts[i])));
+        }
+    }
+
+    public int getTotalCount(){
+        return shapes.size();
+    }
+
+    public int getLSum(){
+        return shapes.stream().mapToInt(Shape::getL).sum();
+    }
+
+    @Override
+    public String toString() {
+        return  id + " " + getTotalCount() + " " +getLSum();
+    }
+}
+
+
+class ShapesApplication{
+    List<Canvas> canvases;
+
+    public ShapesApplication(){
+        canvases = new ArrayList<>();
+    }
+
+    int readCanvases (InputStream inputStream){
+        BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
+
+        br.lines().forEach(line -> canvases.add(new Canvas(line)));
+
+        return canvases.stream().mapToInt(Canvas::getTotalCount).sum();
+    }
+
+    void printLargestCanvasTo (OutputStream outputStream){
+        PrintWriter pw = new PrintWriter(outputStream);
+        int maxL = canvases.stream().mapToInt(Canvas::getLSum).max().orElse(0);
+        Canvas canvas = canvases.stream().filter(c -> c.getLSum()==maxL).findFirst().orElse(null);
+
+        pw.println(canvas);
+        pw.flush();
     }
 }

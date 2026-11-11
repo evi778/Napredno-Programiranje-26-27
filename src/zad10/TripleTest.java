@@ -1,6 +1,10 @@
 package zad10;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 public class TripleTest {
     public static void main(String[] args) {
@@ -31,82 +35,31 @@ public class TripleTest {
         System.out.println(tDouble);
     }
 }
-
 // vasiot kod ovde
-class Triple<T extends Number> {
-    T a;
-    T b;
-    T c;
+
+class Triple<T extends Number & Comparable<T>> {
+    List<T> triple;
 
     public Triple(T a, T b, T c) {
-        this.a = a;
-        this.b = b;
-        this.c = c;
+        triple = List.of(a, b, c);
     }
 
     public double max() {
-        double A = a.doubleValue();
-        double B = b.doubleValue();
-        double C = c.doubleValue();
-
-        if (A >= B && A >= C) {
-            return A;
-        }
-        if (B >= C) {
-            return B;
-        }
-        return C;
+        return triple.stream().mapToDouble(Number::doubleValue).max().getAsDouble();
     }
 
     public double avarage() {
-        double A = a.doubleValue();
-        double B = b.doubleValue();
-        double C = c.doubleValue();
-
-        return (A + B + C) / 3.0;
+        return triple.stream().mapToDouble(Number::doubleValue).sum() / 3.00;
     }
 
-
-    public void sort() {
-        double A = a.doubleValue();
-        double B = b.doubleValue();
-        double C = c.doubleValue();
-
-        if (C == this.max()) {
-            if (A > B) {
-                T temp = b;
-                b = a;
-                a = temp;
-            }
-        } else if (B == this.max()) {
-            T temp = b;
-            b = c;
-            c = temp;
-
-            if (C < A) {
-                T tmp = a;
-                a = b;
-                b = tmp;
-            }
-
-        } else {
-            T temp = a;
-            a = c;
-            c = temp;
-
-            if (C > B) {
-                T tmp = a;
-                a = b;
-                b = tmp;
-            }
-        }
+    void sort() {
+        triple = triple.stream().sorted(Comparator.comparing(Number::doubleValue)).collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Override
     public String toString() {
-        return (String.format("%.2f %.2f %.2f", a.doubleValue(), b.doubleValue(), c.doubleValue()));
+        return String.format("%.2f %.2f %.2f", triple.get(0).doubleValue(), triple.get(1).doubleValue(), triple.get(2).doubleValue());
     }
 }
-
 
 

@@ -1,179 +1,9 @@
 package zad6;
 
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
-
-
-enum Color {
-    RED, GREEN, BLUE
-}
-
-interface Scalable {
-    void scale(float scaleFactor);
-}
-
-interface Stackable {
-    float weight();
-}
-
-class Shape implements Scalable, Stackable {
-    String id;
-    Color color;
-
-    public Shape(String id, Color color) {
-        this.id = id;
-        this.color = color;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public Color getColor() {
-        return color;
-    }
-
-    public void setColor(Color color) {
-        this.color = color;
-    }
-
-    @Override
-    public void scale(float scaleFactor) {
-
-    }
-
-    @Override
-    public float weight() {
-        return 0;
-    }
-
-}
-
-class Circle extends Shape {
-    float radius;
-
-    public Circle(String id, Color color, float radius) {
-        super(id, color);
-        this.radius = radius;
-    }
-
-    @Override
-    public void scale(float scaleFactor) {
-        this.radius *= scaleFactor;
-    }
-
-    @Override
-    public float weight() {
-        return radius * radius * Float.parseFloat(String.valueOf(Math.PI));
-    }
-
-    @Override
-    public String toString() {
-        return String.format("C: %-5s%-10s%10.2f\n", id, color, weight());
-    }
-}
-
-class Rectangle extends Shape {
-    float width;
-    float height;
-
-    public Rectangle(String id, Color color, float width, float height) {
-        super(id, color);
-        this.width = width;
-        this.height = height;
-    }
-
-    @Override
-    public void scale(float scaleFactor) {
-        this.width *= scaleFactor;
-        this.height *= scaleFactor;
-    }
-
-    @Override
-    public float weight() {
-        return width * height;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("R: %-5s%-10s%10.2f\n", id, color, weight());
-    }
-
-}
-
-class Canvas implements Comparator<Shape> {
-    ArrayList<Shape> shapes;
-
-    public Canvas() {
-        shapes = new ArrayList<Shape>();
-    }
-
-
-    int findIndex(Shape c) {
-
-        for (int i = shapes.size() - 1; i >= 0; i--) {
-            if (compare(c, shapes.get(i)) <= 0) {
-                return i + 1;
-            }
-        }
-
-        return 0;
-    }
-
-
-    void add(String id, Color color, float radius) {
-        Circle c = new Circle(id, color, radius);
-
-        int index = findIndex(c);
-
-        shapes.add(index, c);
-
-    }
-
-
-    void add(String id, Color color, float width, float height) {
-        Rectangle r = new Rectangle(id, color, width, height);
-
-        int index = findIndex(r);
-
-        shapes.add(index, r);
-
-    }
-
-    void scale(String id, float scaleFactor) {
-        for (Shape s : shapes) {
-            if (s.id.equals(id)) {
-                shapes.remove(s);
-                s.scale(scaleFactor);
-                int index = findIndex(s);
-                shapes.add(index, s);
-                return;
-            }
-        }
-
-    }
-
-    @Override
-    public int compare(Shape o1, Shape o2) {
-        if (o1.weight() < o2.weight()) {
-            return -1;
-        } else if (o1.weight() > o2.weight()) {
-            return 1;
-        }
-        return 0;
-    }
-
-    @Override
-    public String toString() {
-        return shapes.stream().map(s -> s.toString()).collect(Collectors.joining(""));
-    }
-}
 
 public class ShapesTest {
     public static void main(String[] args) {
@@ -203,5 +33,144 @@ public class ShapesTest {
             }
 
         }
+    }
+}
+
+enum Color {
+    RED, GREEN, BLUE
+}
+
+interface Scalable {
+    void scale(float scaleFactor);
+}
+
+interface Stackable {
+    float weight();
+}
+
+abstract class Shape implements Scalable, Stackable {
+    String id;
+    Color color;
+
+    public Shape(String id, Color color) {
+        this.id = id;
+        this.color = color;
+    }
+
+    public String getType() {
+        return "";
+    }
+
+    public float weight() {
+        return 0;
+    }
+
+    public void scale(float scaleFactor) {
+        return;
+    }
+}
+
+class Circle extends Shape {
+    float radius;
+
+    public Circle(String id, Color color, float radius) {
+        super(id, color);
+        this.radius = radius;
+    }
+
+    @Override
+    public String getType() {
+        return "Circle";
+    }
+
+    @Override
+    public float weight() {
+        return (float) (radius * radius * Math.PI);
+    }
+
+    @Override
+    public void scale(float scaleFactor) {
+        radius = radius * scaleFactor;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("C: %-5s%-10s%10.2f\n", id, color, weight());
+    }
+}
+
+class Rectangle extends Shape {
+    float width;
+    float height;
+
+    public Rectangle(String id, Color color, float width, float height) {
+        super(id, color);
+        this.width = width;
+        this.height = height;
+    }
+
+    @Override
+    public String getType() {
+        return "Rectangle";
+    }
+
+    @Override
+    public float weight() {
+        return height * width;
+    }
+
+    @Override
+    public void scale(float scaleFactor) {
+        height = height * scaleFactor;
+        width = width * scaleFactor;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("R: %-5s%-10s%10.2f\n", id, color, weight());
+    }
+}
+
+class Canvas {
+    List<Shape> shapes;
+
+    public Canvas() {
+        this.shapes = new ArrayList<>();
+    }
+
+    private int find_index(float w) {
+        int i = 0;
+        while (i < shapes.size() && shapes.get(i).weight() >= w) {
+            i++;
+        }
+        return i;
+    }
+
+    public void add(String id, Color color, float radius) {
+        Circle shape = new Circle(id, color, radius);
+        int index = find_index(shape.weight());
+        shapes.add(index, shape);
+    }
+
+    public void add(String id, Color color, float width, float height) {
+        Rectangle shape = new Rectangle(id, color, width, height);
+        int index = find_index(shape.weight());
+        shapes.add(index, shape);
+    }
+
+    public void scale(String id, float scaleFactor) {
+        Shape shape = shapes.stream().filter(s -> s.id.equals(id)).findFirst().orElse(null);
+
+        if (shape != null) {
+            shapes.remove(shape);
+            shape.scale(scaleFactor);
+            int index = find_index(shape.weight());
+            shapes.add(index, shape);
+        }
+    }
+
+    @Override
+    public String toString() {
+        return shapes.stream().map(Object::toString).collect(Collectors.joining(""));
     }
 }

@@ -1,17 +1,30 @@
 package zad2;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.util.ArrayList;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Predicate;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class Shapes2Test {
+
+    public static void main(String[] args) throws IrregularCanvasException {
+
+        ShapesApplication shapesApplication = new ShapesApplication(10000);
+
+        System.out.println("===READING CANVASES AND SHAPES FROM INPUT STREAM===");
+        shapesApplication.readCanvases(System.in);
+
+        System.out.println("===PRINTING SORTED CANVASES TO OUTPUT STREAM===");
+        shapesApplication.printCanvases(System.out);
+
+
+    }
+}
 
 class IrregularCanvasException extends Exception {
-
-    public IrregularCanvasException(String canvas_id, double max_area) {
-        super("Canvas " + canvas_id + " has a shape with area larger than " + String.format("%.2f", max_area));
+    public IrregularCanvasException(String id, double max_area) {
+        super(String.format("Canvas %s has a shape with area larger than %.2f", id, max_area));
     }
 }
 
@@ -22,209 +35,124 @@ abstract class Shape {
         this.size = size;
     }
 
-    public double getSize() {
-        return size;
-    }
-
-    public double getArea() {
+    double getArea() {
         return 0;
-    }
-
-}
-
-class Circle extends Shape {
-
-    public Circle(double radius) {
-        super(radius);
-    }
-
-    @Override
-    public double getArea() {
-        return size * size * Math.PI;
     }
 }
 
 class Square extends Shape {
 
-    public Square(double side) {
-        super(side);
+    public Square(double size) {
+        super(size);
     }
 
     @Override
-    public double getArea() {
+    double getArea() {
         return size * size;
     }
 }
 
+class Circle extends Shape {
 
-class ShapeCanvas {
-    private String id;
-    private ArrayList<Shape> shapes;
-
-    double minArea = 1000000000;
-    double maxArea = 0;
-    double averageArea = 0;
-    int circle_count = 0;
-    int square_count = 0;
-
-
-    ShapeCanvas(String id, ArrayList<Shape> shapes) {
-        this.id = id;
-        this.shapes = shapes;
-
-        for (Shape shape : shapes) {
-            double area = shape.getArea();
-            if (area > maxArea) {
-                maxArea = area;
-            }
-            if (area < minArea) {
-                minArea = area;
-            }
-            averageArea += area;
-
-            if (shape instanceof Square) {
-                square_count += 1;
-            } else {
-                circle_count += 1;
-            }
-        }
-
-        averageArea /= this.getSize();
+    public Circle(double size) {
+        super(size);
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public int getSize() {
-        return shapes.size();
-    }
-
-    public double getMinArea() {
-        return minArea;
-    }
-
-    public double getMaxArea() {
-        return maxArea;
-    }
-
-    public double getAverageArea() {
-        return averageArea;
-    }
-
-    public double getTotalArea() {
-        return shapes.stream()
-                .mapToDouble(Shape::getArea)
-                .sum();
-    }
-
-    public int getTotalCircles() {
-        return circle_count;
-    }
-
-    public int getTotalSquares() {
-        return square_count;
+    @Override
+    double getArea() {
+        return  size * Math.PI * size;
     }
 }
 
-class ShapesApplication {
-    private final ArrayList<ShapeCanvas> canvas;
-    private double maxArea;
+class Canvas {
+    String id;
+    List<Shape> shapes;
+    int c_count, s_count;
 
-    public ShapesApplication() {
-        this.canvas = new ArrayList<>();
+    public Canvas(String line, double maxAreaPermited) throws IrregularCanvasException {
+        String[] parts = line.split("\\s+");
+
+        id = parts[0];
+        shapes = new ArrayList<>();
+        c_count = 0;
+        s_count = 0;
+
+        for (int i = 1; i < parts.length; i += 2) {
+            if (parts[i].equals("C")) {
+                Circle c = new Circle(Double.parseDouble(parts[i + 1]));
+                if (c.getArea() > maxAreaPermited ){
+                    throw new IrregularCanvasException(id,maxAreaPermited);
+                }
+                shapes.add(c);
+                c_count++;
+            } else {
+                Square s = new Square(Double.parseDouble(parts[i + 1]));
+                if (s.getArea() > maxAreaPermited ){
+                    throw new IrregularCanvasException(id,maxAreaPermited);
+                }
+                shapes.add(s);
+                s_count++;
+            }
+        }
+
     }
 
+    public int getTotalCount() {
+        return shapes.size();
+    }
+
+
+    public double getAreaSum() {
+        return shapes.stream().mapToDouble(Shape::getArea).sum();
+    }
+
+    public double getMaxArea() {
+        return shapes.stream().mapToDouble(Shape::getArea).max().orElse(0);
+    }
+
+    public double getMinArea() {
+        return shapes.stream().mapToDouble(Shape::getArea).min().orElse(0);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s %d %d %d %.2f %.2f %.2f",
+                id, getTotalCount(), c_count, s_count, getMinArea(), getMaxArea(), (getAreaSum() / getTotalCount()));
+
+    }
+}
+
+
+class ShapesApplication {
+    List<Canvas> canvases;
+    double maxArea;
+
     public ShapesApplication(double maxArea) {
-        this.canvas = new ArrayList<>();
+        canvases = new ArrayList<>();
         this.maxArea = maxArea;
     }
 
-
-    public void readCanvases(InputStream in) throws IOException, IrregularCanvasException {
-
-        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-
-
-        reader.lines().forEach(line -> {
-
-            String[] parts = line.split(" ");
-            String canvasId = parts[0];
-
-            ArrayList<Shape> shapes = new ArrayList<>();
-
-            try {
-
-                for (int i = 1; i < parts.length; i += 2) {
-
-                    String type = parts[i];
-                    double size = Double.parseDouble(parts[i + 1]);
-
-                    Shape shape;
-
-                    if (type.equals("S")) {
-                        shape = new Square(size);
-                    } else {
-                        shape = new Circle(size);
-                    }
-
-                    if (shape.getArea() > maxArea) {
-                        throw new IrregularCanvasException(canvasId, maxArea);
-                    }
-
-                    shapes.add(shape);
-                }
-
-                ShapeCanvas shapeCanvas = new ShapeCanvas(canvasId, shapes);
-
-                canvas.add(shapeCanvas);
-
-
-            } catch (IrregularCanvasException e) {
+    int readCanvases(InputStream inputStream) {
+        BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
+        br.lines().forEach(line -> {
+            try{
+                canvases.add(new Canvas(line,maxArea));
+            }catch (IrregularCanvasException e){
                 System.out.println(e.getMessage());
             }
         });
 
+        return canvases.stream().mapToInt(Canvas::getTotalCount).sum();
     }
 
-    public void printCanvases(PrintStream out) {
 
+    public void printCanvases(PrintStream out) {
         PrintWriter pw = new PrintWriter(out);
 
-        canvas.stream()
-                .sorted(Comparator.comparingDouble(
-                        ShapeCanvas::getTotalArea
-                ).reversed())
-                .forEach(canvas -> {
-
-                    pw.printf(
-                            "%s %d %d %d %.2f %.2f %.2f%n",
-                            canvas.getId(),
-                            canvas.getSize(),
-                            canvas.getTotalCircles(),
-                            canvas.getTotalSquares(),
-                            canvas.getMinArea(),
-                            canvas.getMaxArea(),
-                            canvas.getAverageArea()
-                    );
-                });
+        canvases.stream()
+                .sorted(Comparator.comparing(Canvas::getAreaSum).reversed())
+                .forEach(pw::println);
 
         pw.flush();
     }
-}
-
-public class Shapes2Test {
-
-    public static void main(String[] args) throws IOException, IrregularCanvasException {
-
-        ShapesApplication shapesApplication = new ShapesApplication(10000);
-
-        System.out.println("===READING CANVASES AND SHAPES FROM INPUT STREAM===");
-        shapesApplication.readCanvases(System.in);
-
-        System.out.println("===PRINTING SORTED CANVASES TO OUTPUT STREAM===");
-        shapesApplication.printCanvases(System.out);
-
-    }
-
 }

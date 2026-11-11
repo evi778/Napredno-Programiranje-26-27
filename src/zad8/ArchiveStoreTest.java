@@ -2,8 +2,9 @@ package zad8;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Scanner;
-
+import java.util.stream.Collectors;
 
 @SuppressWarnings("deprecation")
 public class ArchiveStoreTest {
@@ -19,8 +20,7 @@ public class ArchiveStoreTest {
         for (i = 0; i < n; ++i) {
             int id = scanner.nextInt();
             long days = scanner.nextLong();
-            Date dateToOpen = new Date(date.getTime() + (days * 24 * 60
-                    * 60 * 1000));
+            Date dateToOpen = new Date(date.getTime() + (days * 24 * 60 * 60 * 1000));
             LockedArchive lockedArchive = new LockedArchive(id, dateToOpen);
             store.archiveItem(lockedArchive, date);
         }
@@ -50,12 +50,6 @@ public class ArchiveStoreTest {
 }
 
 // вашиот код овде
-class NonExistingItemException extends Exception {
-
-    public NonExistingItemException(int id) {
-        super(String.format("Item with id %d doesn't exist", id));
-    }
-}
 
 abstract class Archive {
     int id;
@@ -63,21 +57,16 @@ abstract class Archive {
 
     public Archive(int id) {
         this.id = id;
-        this.dateArchived = null;
     }
 
-    public Date getDateArchived() {
-        return dateArchived;
-    }
-
-    public String setDateArchived(Date dateArchived) {
+    public void setDateArchived(Date dateArchived) {
         this.dateArchived = dateArchived;
-        return "Item " + id + " archived at " + dateArchived.toString();
     }
 
-    public String open(Date date) {
+    public String open(Date dateOpened) {
         return "";
     }
+
 }
 
 class LockedArchive extends Archive {
@@ -89,58 +78,59 @@ class LockedArchive extends Archive {
     }
 
     @Override
-    public String open(Date date) {
-        if (date.compareTo(dateToOpen) <= 0) {
-            return "Item " + id + " cannot be opened before " + dateToOpen;
+    public String open(Date dateOpened) {
+        if (dateToOpen.after(dateOpened)) {
+            return String.format("Item %d cannot be opened before %s", id, dateToOpen);
         }
-        return "Item " + id + " opened at " + date;
-
+        return String.format("Item %d opened at %s", id, dateOpened);
     }
-
 }
 
 class SpecialArchive extends Archive {
     int maxOpen;
-    int timesOpened;
+    int oppened;
 
     public SpecialArchive(int id, int maxOpen) {
         super(id);
         this.maxOpen = maxOpen;
-        this.timesOpened = 0;
+        oppened = 0;
     }
 
     @Override
-    public String open(Date date) {
-        if (timesOpened == maxOpen) {
-            return "Item " + id + " cannot be opened more than " + maxOpen + " times";
+    public String open(Date dateOpened) {
+        if (oppened >= maxOpen) {
+            return String.format("Item %d cannot be opened more than %d times", id, maxOpen);
         }
-        timesOpened++;
-        return "Item " + id + " opened at " + date;
+        oppened++;
+        return String.format("Item %d opened at %s", id, dateOpened);
     }
-
 }
 
-
 class ArchiveStore {
-    ArrayList<Archive> archives;
-    ArrayList<String> logs;
+    List<Archive> archiveList;
+    List<String> logs;
 
     public ArchiveStore() {
-        archives = new ArrayList<>();
+        archiveList = new ArrayList<>();
         logs = new ArrayList<>();
     }
 
     public void archiveItem(Archive item, Date date) {
-        String log = item.setDateArchived(date);
-        archives.add(item);
-        logs.add(log);
+        item.setDateArchived(date);
+        archiveList.add(item);
+
+        logs.add(String.format("Item %d archived at %s", item.id, date));
     }
 
     public void openItem(int id, Date date) throws NonExistingItemException {
-        String log = archives.stream().filter(archive -> archive.id == id).
-                findFirst().
-                orElseThrow(() -> new NonExistingItemException(id)).open(date);
-        logs.add(log);
+        Archive archive = archiveList.stream().filter(a -> a.id == id).findAny().orElse(null);
+
+        if (archive == null) {
+            throw new NonExistingItemException(id);
+        }
+
+        logs.add(archive.open(date));
+
     }
 
     public String getLog() {
@@ -149,4 +139,8 @@ class ArchiveStore {
 }
 
 
-
+class NonExistingItemException extends Exception {
+    public NonExistingItemException(int id) {
+        super(String.format("Item with id %d doesn't exist", id));
+    }
+}
